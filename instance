@@ -1,0 +1,19 @@
+import boto3
+import json
+from datetime import datetime, date
+ec2 = boto3.client('ec2')
+response = ec2.describe_instances()
+# Define a function to handle non-serializable types
+def default(obj):
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+# Remove DateTime fields from the dictionary
+for reservation in response['Reservations']:
+    for instance in reservation['Instances']:
+        instance.pop('LaunchTime', None)
+# Convert the response to JSON
+json_response = json.dumps(response, default=default, indent=4)
+# Print the JSON response
+print(json_response)
+
