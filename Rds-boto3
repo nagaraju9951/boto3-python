@@ -1,0 +1,28 @@
+import boto3
+import json
+from datetime import datetime, date
+
+# Create a boto3 client object for the RDS service
+rds = boto3.client('rds')
+
+# Retrieve information about RDS instances
+response = rds.describe_db_instances()
+
+# Define a function to handle non-serializable types
+def default(obj):
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+
+# Remove DateTime fields from the dictionary
+for instance in response['DBInstances']:
+    instance.pop('InstanceCreateTime', None)
+    instance.pop('LatestRestorableTime', None)
+    instance.pop('PendingModifiedValues', None)
+    instance.pop('ReadReplicaDBInstanceIdentifiers', None)
+
+# Convert the response to JSON
+json_response = json.dumps(response, default=default, indent=4)
+
+# Print the JSON response
+print(json_response)
